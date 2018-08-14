@@ -1,0 +1,96 @@
+.gis-ValveTraceDijit {
+    overflow: hidden;
+    font-size: 90%;
+	vertical-align: middle;
+	width: 100% !important;
+}
+/* dijit icons */
+.gis-ValveTraceDijit .dijitIcon {
+    font-family: FontAwesome;
+}
+.gis-ValveTraceDijit .iconFixedWidth {
+    width: 1.3em;
+}
+
+.gis-ValveTraceDijit .flagIcon {
+    background-image: url(../images/UtilityNetworkEdgeAddTool32.png);
+    width:25px;
+    height: 20px;
+    background-repeat: no-repeat;
+    background-size:contain;
+    background-position: center;
+}
+
+.gis-ValveTraceDijit .executeTrace {
+    background-image: url(../images/UtilityNetworkSolve32.png);
+    width:25px;
+    height: 20px;
+    background-repeat: no-repeat;
+    background-size:contain;
+    background-position: center;
+}
+
+
+.gis-ValveTraceDijit .barrierIcon {
+    background-image: url(../images/UtilityNetworkBarrierJunctionAddTool32.png);
+    width:25px;
+    height: 20px;
+    background-repeat: no-repeat;
+    background-size:contain;
+    background-position: center;
+}
+.gis-ValveTraceDijit .edgeBarrierIcon {
+    background-image: url(../images/UtilityNetworkBarrierEdgeAddTool32.png);
+    width:25px;
+    height: 20px;
+    background-repeat: no-repeat;
+    background-size:contain;
+    background-position: center;
+}
+
+.gis-ValveTraceDijit .cancelIcon {
+    background-image: url(../images/delete.png);
+    width:25px;
+    height: 20px;
+    background-repeat: no-repeat;
+    background-size:contain;
+    background-position: center;
+}
+
+.gis-ValveTraceDijit .traceresultsContainer {
+	display: none;
+	font-weight: bold;
+	margin: 10px;
+}
+
+
+.gis-ValveTraceDijit .outerList>li {
+    margin-bottom: 1em;
+}
+.gis-ValveTraceDijit .list-unstyled {
+    list-style-image: none;
+    list-style-position: outside;
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.gis-ValveTraceDijit .list-inline {
+    list-style-image: none;
+    list-style-position: outside;
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.gis-ValveTraceDijit .list-inline > li {
+    display: inline-block;
+}
+
+.gis-ValveTraceDijit .formContainer {
+    width: 100%;
+}
+
+.gis-ValveTraceDijit .dijitButtonNode .dijitIcon {
+    margin-right: 0;
+}
+
+
