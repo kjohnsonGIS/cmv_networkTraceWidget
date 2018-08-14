@@ -1,7 +1,6 @@
 # cmv_networkTraceWidget
-Widget for CMV that utilizes this great SOE: https://github.com/nicogis/Geometric-Network-Utility-SOE
-
-uses a config like this in the viewer.js
+Widget for CMV that utilizes [nicogis](https://github.com/nicogis)'s awesome SOE: https://github.com/nicogis/Geometric-Network-Utility-SOE 
+To use the widget you can make a config like below in the viewer.js..  you also have to have a 1) geometric network in your gis 2) the above SOE installed in AGS and enabled on a map service that has your network layers in it.  
 ```
             valvetrace: {
                 include: true,
