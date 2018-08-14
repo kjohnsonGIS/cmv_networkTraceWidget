@@ -2,6 +2,7 @@
 Widget for CMV that utilizes this great SOE: https://github.com/nicogis/Geometric-Network-Utility-SOE
 
 uses a config like this in the viewer.js
+```
             valvetrace: {
                 include: true,
                 id: 'valvetrace',
@@ -26,3 +27,4 @@ uses a config like this in the viewer.js
                     traceSolverType:'FindFlowElements'
                 }
             }
+```           
