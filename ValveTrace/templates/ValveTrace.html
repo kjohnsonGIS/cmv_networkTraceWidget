@@ -1,0 +1,65 @@
+<div class="gis-ValveTraceDijit">
+
+    <div class="traceContainer">
+        <ul class="list-unstyled outerList">
+            <li>
+                <ul class="list-inline list-unstyled">
+                    <li>
+                        <button data-dojo-type="dijit/form/Button" data-dojo-props="showLabel: false, iconClass: 'flagIcon', title: 'Place Flag',drawType:'FLAG'"
+                                data-dojo-attach-event="onClick:drawFlag"
+                                data-dojo-attach-point="addFlagDijit">
+                        </button>                        
+                    </li>
+                    <li>
+                        <button data-dojo-type="dijit/form/Button" data-dojo-props="showLabel: false, iconClass: 'barrierIcon', title: 'Place Junction Barrier',drawType:'JUNCTBARRIER'"
+                                data-dojo-attach-event="onClick:drawBarrier"
+                                data-dojo-attach-point="addJunctionBarrierDijit">
+                        </button>                        
+                    </li>
+                    <li>
+                        <button data-dojo-type="dijit/form/Button" data-dojo-props="showLabel: false, iconClass: 'edgeBarrierIcon', title: 'Place Edge Barrier', drawType:'EDGEBARRIER'"
+                                data-dojo-attach-event="onClick:drawEdgeBarrier"
+                                data-dojo-attach-point="addEdgeBarrierDijit">
+                        </button>                          
+                    </li>   
+                    <li>
+                        <button data-dojo-type="dijit/form/Button" data-dojo-props="showLabel: false, iconClass: 'cancelIcon', title: 'Cancel', drawType:'CancelTrace'"
+                                data-dojo-attach-event="onClick:stopDrawing" 
+                                data-dojo-attach-point="stopDrawingButton">
+                        </button>                          
+                    </li>                      
+                </ul>
+            </li>
+            <li>
+                <div class="drawModeIndicatorNode">
+                    <span style="font-weight: bold">Current Mode:</span>
+                    <span data-dojo-attach-point="drawModeTextNode">Add Flag</span>
+                </div>
+            </li>               
+        </ul>
+        <label>Trace Method:</label><br/>
+        <select type="select" data-dojo-type="dijit/form/Select" style="width: 200px;" 
+                data-dojo-props="name:'tracetype',required:true,'class':'traceSelect'" 
+                data-dojo-attach-point="traceSelectDijit" data-dojo-attach-event="">
+            <option value="Isolation">Valve Isolation Trace</option>
+            <option value="Connected">Find Connected</option>
+        </select>                 
+        <button id="executeTrace" data-dojo-type="dijit.form.Button"
+                data-dojo-props="iconClass: 'executeTrace', title: 'Solve Trace'"
+                data-dojo-attach-event="onClick:solveTrace"
+                data-dojo-attach-point="traceExecuteButton">
+            Solve Trace
+        </button>  
+        <button data-dojo-type="dijit/form/Button"
+                data-dojo-props="iconClass:'fa fa-history fa-fw', title: 'Clear Flags and Results'" 
+                data-dojo-attach-event="onClick:clearResults"
+                data-dojo-attach-point="eraseDrawingButton">
+            Clear
+        </button> 
+        <div data-dojo-attach-point="traceResultsNode" 
+             class="traceresultsContainer">
+        Getting results, please wait...
+        <img src="../images/loading.gif"  alt='Loading' height: "40px" width "40px"/>    
+        </div>
+    </div>    
+</div>
