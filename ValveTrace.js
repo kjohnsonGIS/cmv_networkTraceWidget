@@ -3,8 +3,6 @@ define([
 	'dijit/_WidgetBase',
 	'dijit/_TemplatedMixin',
     'dijit/_WidgetsInTemplateMixin',
-    'dojox/grid/DataGrid',
-    'dojo/data/ItemFileWriteStore',
 	'dojo/_base/lang',
     'dojo/topic',
     'dojo/aspect',
@@ -15,20 +13,15 @@ define([
     'esri/toolbars/draw',
     'esri/graphic',
     'esri/renderers/SimpleRenderer',
-    'esri/symbols/PictureMarkerSymbol',
-    'esri/graphicsUtils',
     'esri/geometry/Point',
     'esri/SpatialReference',
 	'esri/geometry/Extent',
     'esri/tasks/FeatureSet',    
-    'esri/tasks/Geoprocessor',
     'esri/symbols/SimpleMarkerSymbol',
     'esri/symbols/SimpleLineSymbol',
     "esri/Color",
     'esri/request',
-	'proj4js/proj4',
     'dojo/text!./ValveTrace/templates/ValveTrace.html',
-    
     'dijit/form/Button',
     "dijit/form/Select",
 	'xstyle/css!./ValveTrace/css/ValveTrace.css'
@@ -37,11 +30,11 @@ define([
 	_WidgetBase,
 	_TemplatedMixin,
     _WidgetsInTemplateMixin,  
-    DataGrid, ItemFileWriteStore,
 	lang, topic, aspect,dom, JSON, on,
-    GraphicsLayer, Draw, Graphic, SimpleRenderer, PictureMarkerSymbol, graphicsUtils, Point, SpatialReference, Extent,FeatureSet, Geoprocessor, SimpleMarkerSymbol,SimpleLineSymbol,Color,
+    GraphicsLayer, Draw, Graphic, SimpleRenderer, 
+     Point, SpatialReference, Extent,FeatureSet,
+     SimpleMarkerSymbol,SimpleLineSymbol,Color,
     esriRequest,
-	proj4,
     template
 ) {
     return declare([_WidgetBase, _TemplatedMixin, _WidgetsInTemplateMixin], {
@@ -56,12 +49,20 @@ define([
         stationLayerId: 8, 
         valveLayerId: 3, 
         flowElements: 'esriFEJunctionsAndEdges', 
-        outFields:'FACILITYID,OBJECTID', 
+        outFields:'FACILITYID,OBJECTID,wServiceMeter', 
         maxTracedFeatures: 10000, 
         tolerance: 12, 
+        networkFCcount: 19,
         flowMethod: 'esriFMConnected',
         traceIndeterminateFlow: true,  
         traceSolverType:'FindFlowElements',
+        sourceFeature: 'wServiceMeter', 
+        sourceKeyField: 'FACILITYID',
+        relatedqueryURL: '',
+        relatedOutFields: ['OBJECTID', 'SERVICE_ID'], 
+        relatedForeignkey: 'WSCFACILITYID',     
+        relatedTitle: '',
+        relatedOID: 'ObjectID',
 
         postCreate: function () {
             this.inherited(arguments);
@@ -76,10 +77,7 @@ define([
                     this.onLayoutChange(this.parentWidget.open);
                 })));
             }         
-            //below is testing to help testing the removeTable topic
-            this.own(topic.subscribe('trvalveisolationResults/tableRemoved', function(){
-                alert('removeTable is working!');
-            }));
+
 
         },
         createGraphicLayers: function () {
@@ -287,14 +285,18 @@ define([
             this.endDrawing();
             this.connectMapClick();
             this.drawModeTextNode.innerText = 'None';
-            for (var i=0; i < 18; i++){
-                topic.publish('tr' + i.toString() + 'isolationResults' + '/clearAll');   
-                //below is not working
-                topic.publish('tr' + i.toString() + 'isolationResults' + '/removeTable');                    
+            //removes the tables added with generic numerical ids
+            for (var i=0; i < this.networkFCcount; i++){ 
+                topic.publish('attributesContainer' + '/removeTable', 
+                     'tr' + i.toString() + 'isolationResults'
+                );                 
+            
             }
-            topic.publish('trvalvesisolationResults' + '/clearAll');
-            //below is not working
-            topic.publish('trvalvesisolationResults' + '/removeTable');            
+            //clear out specified result tables by id
+            topic.publish('attributesContainer' + '/removeTable',  'trvalvesisolationResults'); 
+            topic.publish('attributesContainer' + '/removeTable', 'tr' + this.relatedInfo.sourceFeature + 'isolationResults');      
+            topic.publish('attributesContainer' + '/removeTable',  'traceResults_relatedFeatures');  
+           
 
         },
         endDrawing: function () {
@@ -328,7 +330,7 @@ define([
                 console.log( 'need only one flag');
                 topic.publish('growler/growl', {
                     title: 'Network Trace',
-                    message: 'Tool only supports placing one flag.  The map contains: ' + this.flagGraphics.graphics.length + ' flags.'
+                    message: 'Currently, tool only supports placing one flag.  The map contains: ' + this.flagGraphics.graphics.length + ' flags.'
                 });                
                 return;
             }
@@ -410,9 +412,11 @@ define([
         processResults: function (results) { 
             var counter= 0;
             var geomTyoe = null;
+            var relatedIds = [];
             if (results.edges) {
                 this.displayTraceMessage('hide','');
                 for (var resgroup in results){
+                    //the SOE results sends back valves, junctions and edges.  work with those and types and process accordingly
                     if (resgroup === 'valves' || resgroup === 'junctions' ||  resgroup ==='edges' ){
                         //the valves group that gets returned is not an array.  
                         if (results[resgroup].length === undefined && resgroup === 'valves' ){
@@ -421,9 +425,24 @@ define([
                             counter +=1;
                             this.openTable(results[resgroup], counter, resgroup); 
                         } else if (results[resgroup].length > -1) {
-                             for (i=0; i < results[resgroup].length; i++){
-                                counter +=1;
-                                this.openTable(results[resgroup][i], counter, resgroup);                                  
+                            console.log(results[resgroup]);
+                             for (var i=0; i < results[resgroup].length; i++){
+                                 //start looking for related features if specified in config.  since the SOE only sends back valves, junctions and edges, I used the result featureSet's "fieldAliases" object to find a "special feature" that i designated ahead of time in the database.  this was done by adding a field to this feature class with a designated name that can be referred to in relatedInfo.sourceFeature.  Note: this hack could be avoided if the SOE featureSet sends back a value for "displayFieldName"
+                                 if (this.relatedInfo.sourceFeature != '' && results[resgroup][i].fieldAliases[this.relatedInfo.sourceFeature]) {
+                                     for (var h =0; h <results[resgroup][i].features.length; h++){
+                                         //add ids of source features to be used in query on related features
+                                         relatedIds.push(results[resgroup][i].features[h].attributes[this.relatedInfo.sourceKeyField]);
+                                     } 
+                                     //open the table for the source feature
+                                     this.openTable(results[resgroup][i], this.relatedInfo.sourceFeature, resgroup);  
+                                     //open another table for the specified related table
+                                     this.getRelatedTable(relatedIds);
+                                 } 
+                                 else {
+                                    counter +=1;
+                                    this.openTable(results[resgroup][i], counter, resgroup);                                        
+                                 }
+                               
                              }
                         }
                     }
@@ -445,7 +464,7 @@ define([
             //add graphics to map for junction features
             if (resgroup === 'junctions' && values.features.length > -1) {
                 nextGraphicSet = values.features;
-                for (x=0; x< nextGraphicSet.length; x++){
+                for (var x=0; x< nextGraphicSet.length; x++){
                     graphicObj["geometry"] = nextGraphicSet[x].geometry;       
                     OGgraphic = new Graphic(graphicObj);  
                     this.ojGraphics.add(OGgraphic);                     
@@ -453,19 +472,21 @@ define([
             //add graphics to map for edge features
             } else if (resgroup === 'edges' && values.features.length > -1) {
                 nextGraphicSet = values.features;
-                for (y=0; y< nextGraphicSet.length; y++){
+                for (var y=0; y< nextGraphicSet.length; y++){
                     graphicObj["geometry"] =  nextGraphicSet[y].geometry;       
                     OLgraphic = new Graphic(graphicObj);
                     this.olGraphics.add(OLgraphic);
                 }
             }
             //remove existing table before adding new one
-            //which is not working at the moment
-            topic.publish('tr' + cnter.toString() + 'isolationResults' + '/removeTable');  
-            // add the new table- this works fine
+            topic.publish('attributesContainer' + '/removeTable',               
+                  'tr' + cnter.toString() + 'isolationResults'
+            );  
+            // add the new table
             topic.publish('attributesContainer/addTable', {
                 title: 'tr' + cnter.toString(),
-                topicID: 'tr' + cnter.toString() + 'isolationResults',  
+                topicID: 'tr' + cnter.toString() + 'isolationResults', 
+                id: 'tr' + cnter.toString() + 'isolationResults', 
                 closable: true,
                 confirmClose: true,
                 useTabs:true,
@@ -495,14 +516,72 @@ define([
                     }
                 },
                 featureOptions: {
-                    zoomToSource: false
-                }                    
+                    zoomToSource: false,
+                    zoomToSelected: false
+                },           
+                toolbarOptions: {
+                    zoom: {
+                        show: false
+                    }
+                }
             });           
-            //populate the newly created table with the featureset- topic is the same as the topicID using in "addTable", this works fine
+            //populate the newly created table with the featureset- topic is the same as the topicID using in "addTable"
             topic.publish('tr' + cnter.toString() + 'isolationResults' + '/populateGrid', featureSet);    
                 
 
                          
+        },
+        getRelatedTable: function(ids) {
+            var idsforQuery =   "\'" + ids.join("\',\'") + "\'";
+            topic.publish('attributesContainer/addTable', {
+                title: this.relatedInfo.relatedtitle,
+                topicID: 'traceResults_relatedFeatures',  
+                id: 'traceResults_relatedFeatures', 
+                closable: true,
+                confirmClose: true, 
+                symbolOptions: {
+                    features: {
+                         point: {
+                            type: 'esriSMS',
+                            style: 'esriSMSCircle',
+                            size: 10,
+                            color: [ 168,0,0,64],
+                            angle: 0,
+                            xoffset: 0,
+                            yoffset: 0,
+                            outline: {
+                                type: 'esriSLS',
+                                style: 'esriSLSSolid',
+                                color: [230,0,0,255],
+                                width: 1
+                            }
+                        }    
+                    }
+                },                
+                toolbarOptions: {
+                },
+                gridOptions: {
+                },
+                featureOptions: {
+                    features: true, 
+                    selected: true, 
+                    highlight: true, 
+                    source:true,
+                    zoomToSource: true, 
+                    zoomToSelected: true  
+                },
+                queryOptions: {
+                    // parameters for the query
+                    queryParameters: {
+                        type: 'spatial', 
+                        url: this.relatedInfo.relatedqueryURL,
+                        maxAllowableOffset: 1,
+                        outFields: this.relatedInfo.relatedOutFields, 
+                        where: this.relatedInfo.relatedForeignkey + ' IN (' + idsforQuery + ')' 
+                    },
+                    idProperty: this.relatedInfo.relatedOID 
+                }                
+            });             
         },
         displayTraceMessage: function (mode, message) {
             if (mode === 'show') {
