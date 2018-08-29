@@ -27,7 +27,7 @@ valvetrace: {
         traceIndeterminateFlow: true,
         traceSolverType:'FindFlowElements',
         relatedInfo: {
-            sourceFeature: 'wServiceMeter', 
+            sourceFeature: 'wService', 
             sourceKeyField: 'FACILITYID',
             relatedqueryURL: 'http://yourserver/arcgis/rest/services/DistributionGeometricNetworkTrace/MapServer/18',
             relatedOutFields: ['OBJECTID', 'SERVICE_ID','CONCAT_ADDRESS'], 
