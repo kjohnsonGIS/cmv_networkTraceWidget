@@ -20,7 +20,7 @@ valvetrace: {
         valveLayerId: 3, 
         networkFCcount: 19,
         flowElements: 'esriFEJunctionsAndEdges', 
-        outFields:'FACILITYID,wServiceMeter,WSCFACILITYID', 
+        outFields:'FACILITYID,wService,WSCID', 
         maxTracedFeatures: 10200, 
         tolerance: 12, 
         flowMethod: 'esriFMConnected',
@@ -31,7 +31,7 @@ valvetrace: {
             sourceKeyField: 'FACILITYID',
             relatedqueryURL: 'http://yourserver/arcgis/rest/services/DistributionGeometricNetworkTrace/MapServer/18',
             relatedOutFields: ['OBJECTID', 'SERVICE_ID','CONCAT_ADDRESS'], 
-            relatedForeignkey: 'WSCFACILITYID',
+            relatedForeignkey: 'WSCID',
             relatedtitle: 'Related Features',
             relatedOID: 'OBJECTID'
         }
